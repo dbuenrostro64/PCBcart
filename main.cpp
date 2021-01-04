@@ -7,10 +7,12 @@
 void initSleep();
 void initTimer1();
 void initPwm();
-void motorPwmAndDirection(bool, int);
+void motorPwmAndDirection(int, int);
+void sleepMode();
 
 ISR(TIMER1_OVF_vect)
 {
+	//blink LED
 	DDRB |= (1<<PORTB5);
 	PORTB ^= (1<<PORTB5);
 	TCNT1 = 49916;
@@ -27,17 +29,8 @@ int main()
 
 	while(1)
 	{
-		motorPwmAndDirection(false,75);
-		
-		//-------SLEEP MODE------------
-		//for(int i=0;i<4;i++) // sleep for 32 sec/ 8 secs per i
-		//{
-		////BOD disable
-		//MCUCR |= (3<<BODSE); //sets both BODS and BODSE
-		//MCUCR &= ~(1<<BODSE); //clear BODSE pinS
-		////sleep command
-		//__asm__ __volatile__("sleep");
-		//}
+		motorPwmAndDirection(1,75);
+		//sleepMode();
 	}
 }
 
@@ -78,16 +71,30 @@ void initPwm()
 	DDRD |= (1<<PORTD6) | (1<<PORTD5); // set OC0A & OC0B to output
 }
 
-void motorPwmAndDirection(bool direction, int pwmValue)
+// direction: 1=forward 2=reverse; pwmValue: 0-255 motor speed
+void motorPwmAndDirection(int direction, int pwmValue)
 {
-	if (direction == true)
+	if (direction == 1)
 	{
 		OCR0A = 0;
 		OCR0B = pwmValue;
 	}
-	if (direction == false)
+	if (direction == 2)
 	{
 		OCR0A = pwmValue;
 		OCR0B = 0;
+	}
+}
+
+void sleepMode()
+{
+	//-------SLEEP MODE------------
+	for(int i=0;i<4;i++) // sleep for 32 sec/ 8 secs per i
+	{
+	//BOD disable
+	MCUCR |= (3<<BODSE); //sets both BODS and BODSE
+	MCUCR &= ~(1<<BODSE); //clear BODSE pinS
+	//sleep command
+	__asm__ __volatile__("sleep");
 	}
 }
